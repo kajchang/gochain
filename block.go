@@ -6,17 +6,19 @@ import (
 )
 
 type Block struct {
-	transactions []Transaction
-	previousHash []byte
-	timestamp    uint64
+	Transactions []Transaction
+	PreviousHash []byte
+	Timestamp    uint64
+	Nonce        uint64
 }
 
 func (b Block) toBuffer() []byte {
 	var buf bytes.Buffer
-	buf.Write(b.previousHash)
-	buf.Write(EncodeUint64(b.timestamp))
-	for _, t := range b.transactions {
-		buf.Write(t.Hash())
+	buf.Write(b.PreviousHash)
+	buf.Write(EncodeUint64(b.Timestamp))
+	buf.Write(EncodeUint64(b.Nonce))
+	for _, t := range b.Transactions {
+		buf.Write(t.toBuffer())
 	}
 	return buf.Bytes()
 }

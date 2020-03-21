@@ -6,20 +6,20 @@ import (
 )
 
 type Transaction struct {
-	from      string
-	to        string
-	amount    float64
-	timestamp uint64
-	nonce     uint64
+	From      []byte
+	To        []byte
+	Amount    float64
+	Timestamp uint64
+	Nonce     uint64
 }
 
 func (t Transaction) toBuffer() []byte {
 	var buf bytes.Buffer
-	buf.Write([]byte(t.from))
-	buf.Write([]byte(t.to))
-	buf.Write(EncodeFloat64(t.amount))
-	buf.Write(EncodeUint64(t.timestamp))
-	buf.Write(EncodeUint64(t.nonce))
+	buf.Write(t.From)
+	buf.Write(t.To)
+	buf.Write(EncodeFloat64(t.Amount))
+	buf.Write(EncodeUint64(t.Timestamp))
+	buf.Write(EncodeUint64(t.Nonce))
 	return buf.Bytes()
 }
 
