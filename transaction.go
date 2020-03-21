@@ -13,7 +13,7 @@ type Transaction struct {
 	Nonce     uint64
 }
 
-func (t Transaction) toBuffer() []byte {
+func (t Transaction) ToBuffer() []byte {
 	var buf bytes.Buffer
 	buf.Write(t.From)
 	buf.Write(t.To)
@@ -25,6 +25,6 @@ func (t Transaction) toBuffer() []byte {
 
 func (t Transaction) Hash() []byte {
 	h := sha256.New()
-	h.Write(t.toBuffer())
+	h.Write(t.ToBuffer())
 	return h.Sum(nil)
 }

@@ -4,16 +4,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/kajchang/gochain"
-	"time"
 )
 
 func main() {
-	transaction := gochain.Transaction{
-		From: []byte ("Coinbase"),
-		To:   []byte ("Human   "),
-		Amount: 50,
-		Timestamp: uint64 (time.Now().Unix()),
-		Nonce: 0,
+	myAddress := []byte ("~~~~~~~~~~~~~~~~ME~~~~~~~~~~~~~~~~")
+	blockchain := gochain.Genesis(myAddress)
+	for len(blockchain) < 50 {
+		blockchain = append(blockchain, blockchain.MineBlock(blockchain.GenerateCoinbaseTransaction(myAddress).ToBuffer()))
 	}
-	fmt.Printf(hex.EncodeToString(transaction.Hash()))
+	fmt.Println(blockchain)
 }
