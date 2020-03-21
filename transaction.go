@@ -2,6 +2,9 @@ package gochain
 
 import (
 	"bytes"
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/sha256"
 )
 
@@ -11,9 +14,10 @@ type Transaction struct {
 	Amount    float64
 	Timestamp uint64
 	Nonce     uint64
+	Signature []byte
 }
 
-func (t Transaction) ToBuffer() []byte {
+func (t Transaction) Header() []byte {
 	var buf bytes.Buffer
 	buf.Write(t.From)
 	buf.Write(t.To)
@@ -25,6 +29,18 @@ func (t Transaction) ToBuffer() []byte {
 
 func (t Transaction) Hash() []byte {
 	h := sha256.New()
-	h.Write(t.ToBuffer())
+	h.Write(t.Header())
 	return h.Sum(nil)
+}
+
+func (t Transaction) ToBuffer() []byte {
+	var buf bytes.Buffer
+	buf.Write(t.Header())
+	buf.Write(t.Signature)
+	return buf.Bytes()
+}
+
+func (t *Transaction) Sign(key *ecdsa.PrivateKey) {
+	signature, _ := key.Sign(rand.Reader, t.Hash(), crypto.SHA256)
+	t.Signature = signature
 }

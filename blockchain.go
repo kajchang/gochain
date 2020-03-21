@@ -18,12 +18,13 @@ func (blockchain Blockchain) GetCoinbase() float64 {
 }
 
 func (blockchain Blockchain) GenerateCoinbaseTransaction(minerAddress []byte) Transaction {
-	return Transaction {
-		From:      make([]byte, 32),
+	return Transaction{
+		From:      make([]byte, 65),
 		To:        minerAddress,
 		Amount:    blockchain.GetCoinbase(),
 		Timestamp: uint64 (time.Now().Unix()),
 		Nonce:     0,
+		Signature: make([]byte, 71),
 	}
 }
 
@@ -41,11 +42,15 @@ func (blockchain Blockchain) MineBlock(data []byte) Block {
 			Timestamp:    timestamp,
 			Nonce:        nonce,
 		}
-		if bytes.HasPrefix(candidateBlock.Hash(), blockchain.GetDifficulty()) {
+		if blockchain.ValidNextHash(candidateBlock) {
 			return candidateBlock
 		}
 		nonce++
 	}
+}
+
+func (blockchain Blockchain) ValidNextHash(block Block) bool {
+	return bytes.HasPrefix(block.Hash(), blockchain.GetDifficulty())
 }
 
 func Genesis(genesisAddress []byte) Blockchain {

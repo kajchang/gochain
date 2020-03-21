@@ -12,7 +12,7 @@ type Block struct {
 	Nonce        uint64
 }
 
-func (b Block) ToBuffer() []byte {
+func (b Block) Header() []byte {
 	var buf bytes.Buffer
 	buf.Write(b.PreviousHash)
 	buf.Write(EncodeUint64(b.Timestamp))
@@ -23,6 +23,6 @@ func (b Block) ToBuffer() []byte {
 
 func (b Block) Hash() []byte {
 	h := sha256.New()
-	h.Write(b.ToBuffer())
+	h.Write(b.Header())
 	return h.Sum(nil)
 }
