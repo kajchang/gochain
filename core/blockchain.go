@@ -1,8 +1,9 @@
-package gochain
+package core
 
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/kajchang/gochain"
 	"strconv"
 	"time"
 )
@@ -10,7 +11,9 @@ import (
 const StartingCoinbase = 50
 var CoinbaseAddress = make([]byte, 65)
 
-type Blockchain []Block
+type Blockchain struct {
+	Blocks []Block
+}
 
 func (blockchain Blockchain) GetDifficulty() []byte {
 	return []byte {1}
@@ -22,7 +25,7 @@ func (blockchain Blockchain) GetCoinbase() float64 {
 
 func (blockchain Blockchain) GetBalance(address []byte) float64 {
 	balance := 0.0
-	for _, block := range blockchain {
+	for _, block := range blockchain.Blocks {
 		for _, transaction := range block.Transactions {
 			if bytes.Equal(transaction.To, address) {
 				balance += transaction.Out
@@ -37,7 +40,7 @@ func (blockchain Blockchain) GetBalance(address []byte) float64 {
 
 func (blockchain Blockchain) GetAddressNonce(address []byte) uint64 {
 	var nonce uint64 = 0
-	for _, block := range blockchain {
+	for _, block := range blockchain.Blocks {
 		for _, transaction := range block.Transactions {
 			if bytes.Equal(transaction.From, address) {
 				nonce++
@@ -63,8 +66,8 @@ func (blockchain Blockchain) MineBlock(transactions []Transaction) Block {
 	var nonce uint64 = 0
 	for {
 		previousHash := make([]byte, 32)
-		if len(blockchain) != 0 {
-			previousHash = blockchain[len(blockchain) - 1].Hash()
+		if len(blockchain.Blocks) != 0 {
+			previousHash = blockchain.Blocks[len(blockchain.Blocks) - 1].Hash()
 		}
 		timestamp := uint64 (time.Now().Unix())
 		candidateBlock := Block{
@@ -84,41 +87,27 @@ func (blockchain Blockchain) ValidNextHash(block Block) bool {
 	return bytes.HasPrefix(block.Hash(), blockchain.GetDifficulty())
 }
 
-func (blockchain Blockchain) VerifyBlock(block Block) bool {
-	net := 0.0
-	for _, transaction := range block.Transactions {
-		if !bytes.Equal(transaction.From, CoinbaseAddress) &&
-			(
-				transaction.Out > transaction.In ||
-				!transaction.VerifySignature() ||
-				blockchain.GetBalance(transaction.From) < transaction.In ||
-				blockchain.GetAddressNonce(transaction.From) != transaction.Nonce) {
-			return false
-		}
-		net -= transaction.In
-		net += transaction.Out
-	}
-
-	return blockchain.ValidNextHash(block) && net <= blockchain.GetCoinbase()
+func (blockchain *Blockchain) AddBlock(block Block) {
+	blockchain.Blocks = append(blockchain.Blocks, block)
 }
 
 func Genesis(genesisAddress []byte) Blockchain {
 	blockchain := Blockchain{}
 	genesisCoinbase := blockchain.GenerateCoinbaseTransaction(genesisAddress)
-	blockchain = append(blockchain, blockchain.MineBlock([]Transaction{genesisCoinbase}))
+	blockchain.Blocks = append(blockchain.Blocks, blockchain.MineBlock([]Transaction{genesisCoinbase}))
 	return blockchain
 }
 
 func (blockchain Blockchain) String() string {
-	result := "|" + MiddlePadString("Index", 8) + "|" +
-		      MiddlePadString("Previous Hash", 68) + "|" +
-		      MiddlePadString("Hash", 68) + "|" +
-		      MiddlePadString("Size", 8) + "|\n"
-	for i, block := range blockchain {
-		result += "|" + MiddlePadString(strconv.Itoa(i), 8) + "|" +
-			      MiddlePadString(hex.EncodeToString(block.PreviousHash), 68) + "|" +
-			      MiddlePadString(hex.EncodeToString(block.Hash()), 68) + "|" +
-			      MiddlePadString(strconv.Itoa(len(block.Transactions)), 8) + "|\n"
+	result := "|" + gochain.MiddlePadString("Index", 8) + "|" +
+		      gochain.MiddlePadString("Previous Hash", 68) + "|" +
+		      gochain.MiddlePadString("Hash", 68) + "|" +
+		      gochain.MiddlePadString("Size", 8) + "|\n"
+	for i, block := range blockchain.Blocks {
+		result += "|" + gochain.MiddlePadString(strconv.Itoa(i), 8) + "|" +
+			      gochain.MiddlePadString(hex.EncodeToString(block.PreviousHash), 68) + "|" +
+			      gochain.MiddlePadString(hex.EncodeToString(block.Hash()), 68) + "|" +
+			      gochain.MiddlePadString(strconv.Itoa(len(block.Transactions)), 8) + "|\n"
 	}
 	return result
 }

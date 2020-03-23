@@ -1,4 +1,4 @@
-package gochain
+package core
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"github.com/kajchang/gochain"
 	"math/big"
 )
 
@@ -37,10 +38,10 @@ func (t Transaction) Header() []byte {
 	var buf bytes.Buffer
 	buf.Write(t.From)
 	buf.Write(t.To)
-	buf.Write(EncodeFloat64(t.In))
-	buf.Write(EncodeFloat64(t.Out))
-	buf.Write(EncodeUint64(t.Timestamp))
-	buf.Write(EncodeUint64(t.Nonce))
+	buf.Write(gochain.EncodeFloat64(t.In))
+	buf.Write(gochain.EncodeFloat64(t.Out))
+	buf.Write(gochain.EncodeUint64(t.Timestamp))
+	buf.Write(gochain.EncodeUint64(t.Nonce))
 	return buf.Bytes()
 }
 
@@ -76,4 +77,8 @@ func (t *Transaction) VerifySignature() bool {
 	r := new(big.Int).SetBytes(t.Signature[:32])
 	s := new(big.Int).SetBytes(t.Signature[32:])
 	return ecdsa.Verify(&pk, t.Hash(), r, s)
+}
+
+func (t Transaction) VerifyIntegrity() bool {
+	return t.Out <= t.In && t.VerifySignature()
 }

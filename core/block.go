@@ -1,8 +1,9 @@
-package gochain
+package core
 
 import (
 	"bytes"
 	"crypto/sha256"
+	"github.com/kajchang/gochain"
 )
 
 type Block struct {
@@ -15,8 +16,8 @@ type Block struct {
 func (b Block) Header() []byte {
 	var buf bytes.Buffer
 	buf.Write(b.PreviousHash)
-	buf.Write(EncodeUint64(b.Timestamp))
-	buf.Write(EncodeUint64(b.Nonce))
+	buf.Write(gochain.EncodeUint64(b.Timestamp))
+	buf.Write(gochain.EncodeUint64(b.Nonce))
 	for _, transaction := range b.Transactions {
 		buf.Write(transaction.ToBuffer())
 	}
