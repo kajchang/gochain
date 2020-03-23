@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/asn1"
+	"math/big"
 )
 
 type Transaction struct {
@@ -43,4 +46,21 @@ func (t Transaction) ToBuffer() []byte {
 func (t *Transaction) Sign(key *ecdsa.PrivateKey) {
 	signature, _ := key.Sign(rand.Reader, t.Hash(), crypto.SHA256)
 	t.Signature = signature
+}
+
+func (t *Transaction) VerifySignature() bool {
+	x, y := elliptic.Unmarshal(StandardCurve, t.From)
+	pk := ecdsa.PublicKey{
+		Curve: StandardCurve,
+		X:     x,
+		Y:     y,
+	}
+	var esig struct {
+		R, S *big.Int
+	}
+	_, err := asn1.Unmarshal(t.Signature, &esig)
+	if err != nil {
+		return false
+	}
+	return ecdsa.Verify(&pk, t.Hash(), esig.R, esig.S)
 }
