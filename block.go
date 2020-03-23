@@ -6,7 +6,7 @@ import (
 )
 
 type Block struct {
-	Data         []byte
+	Transactions []Transaction
 	PreviousHash []byte
 	Timestamp    uint64
 	Nonce        uint64
@@ -17,7 +17,9 @@ func (b Block) Header() []byte {
 	buf.Write(b.PreviousHash)
 	buf.Write(EncodeUint64(b.Timestamp))
 	buf.Write(EncodeUint64(b.Nonce))
-	buf.Write(b.Data)
+	for _, transaction := range b.Transactions {
+		buf.Write(transaction.ToBuffer())
+	}
 	return buf.Bytes()
 }
 

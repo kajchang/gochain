@@ -2,19 +2,32 @@ package gochain
 
 import (
 	"bytes"
-	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/asn1"
 	"math/big"
 )
+
+var StandardCurve = elliptic.P256()
+
+/*
+65 bytes - From
+65 bytes - To
+8 bytes - In
+8 bytes - Out
+8 bytes - Timestamp
+8 bytes - Nonce
+64 bytes - Signature
+--
+226 bytes - Total
+*/
 
 type Transaction struct {
 	From      []byte
 	To        []byte
-	Amount    float64
+	In        float64
+	Out       float64
 	Timestamp uint64
 	Nonce     uint64
 	Signature []byte
@@ -24,7 +37,8 @@ func (t Transaction) Header() []byte {
 	var buf bytes.Buffer
 	buf.Write(t.From)
 	buf.Write(t.To)
-	buf.Write(EncodeFloat64(t.Amount))
+	buf.Write(EncodeFloat64(t.In))
+	buf.Write(EncodeFloat64(t.Out))
 	buf.Write(EncodeUint64(t.Timestamp))
 	buf.Write(EncodeUint64(t.Nonce))
 	return buf.Bytes()
@@ -43,9 +57,13 @@ func (t Transaction) ToBuffer() []byte {
 	return buf.Bytes()
 }
 
-func (t *Transaction) Sign(key *ecdsa.PrivateKey) {
-	signature, _ := key.Sign(rand.Reader, t.Hash(), crypto.SHA256)
-	t.Signature = signature
+func (t *Transaction) Sign(key *ecdsa.PrivateKey) (err error) {
+	r, s, err := ecdsa.Sign(rand.Reader, key, t.Hash())
+	if err != nil {
+		return err
+	}
+	t.Signature = append(r.Bytes(), s.Bytes()...)
+	return nil
 }
 
 func (t *Transaction) VerifySignature() bool {
@@ -55,12 +73,7 @@ func (t *Transaction) VerifySignature() bool {
 		X:     x,
 		Y:     y,
 	}
-	var esig struct {
-		R, S *big.Int
-	}
-	_, err := asn1.Unmarshal(t.Signature, &esig)
-	if err != nil {
-		return false
-	}
-	return ecdsa.Verify(&pk, t.Hash(), esig.R, esig.S)
+	r := new(big.Int).SetBytes(t.Signature[:32])
+	s := new(big.Int).SetBytes(t.Signature[32:])
+	return ecdsa.Verify(&pk, t.Hash(), r, s)
 }
