@@ -35,6 +35,18 @@ func (blockchain Blockchain) GetBalance(address []byte) float64 {
 	return balance
 }
 
+func (blockchain Blockchain) GetAddressNonce(address []byte) uint64 {
+	var nonce uint64 = 0
+	for _, block := range blockchain {
+		for _, transaction := range block.Transactions {
+			if bytes.Equal(transaction.From, address) {
+				nonce++
+			}
+		}
+	}
+	return nonce
+}
+
 func (blockchain Blockchain) GenerateCoinbaseTransaction(minerAddress []byte) Transaction {
 	return Transaction{
 		From:      CoinbaseAddress,
