@@ -91,7 +91,8 @@ func (blockchain Blockchain) VerifyBlock(block Block) bool {
 			(
 				transaction.Out > transaction.In ||
 				!transaction.VerifySignature() ||
-				blockchain.GetBalance(transaction.From) < transaction.In) {
+				blockchain.GetBalance(transaction.From) < transaction.In ||
+				blockchain.GetAddressNonce(transaction.From) != transaction.Nonce) {
 			return false
 		}
 		net -= transaction.In
